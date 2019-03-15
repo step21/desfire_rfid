@@ -1,23 +1,31 @@
 language: cpp
-sudo: false
-cache:
-  directories:
-    - ~/arduino_ide
-    - ~/.arduino15/packages/
-git:
-  depth: false
-  quiet: true
-env:
-  global:
-     - ARDUINO_IDE_VERSION="1.8.7"
+
 before_install:
-  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
+  - sleep 3
+  - export DISPLAY=:1.0
+  - wget http://downloads.arduino.cc/arduino-${IDE_VERSION}-linux64.tar.xz
+  - tar xf arduino-${IDE_VERSION}-linux64.tar.xz
+  - sudo mv arduino-${IDE_VERSION} /usr/local/share/arduino
+  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  
+install:
+#  - ln -s $PWD /usr/local/share/arduino/libraries/MicroDebug
+  
 script:
-  - build_platform esp32
-  - build_platform esp8266
-  - build_platform mega
-  #  uno]="arduino:avr:uno" [due]="arduino:sam:arduino_due_x" [zero]="arduino:samd:arduino_zero_native" [esp8266]="esp8266:esp8266:huzzah:eesz=4M3M,xtal=80" [leonardo]="arduino:avr:leonardo" [m4]="adafruit:samd:adafruit_metro_m4" [mega2560]="arduino:avr:mega:cpu=atmega2560" [esp32]="esp32:esp32:featheresp32:FlashFreq=80" )'
+  - arduino --verify --board ${BOARD} $PWD/examples/DoorOpenerSketch.ino
+#  - arduino --verify --board ${BOARD} $PWD/examples/LedDebug/LedDebug.ino
+#  - arduino --verify --board ${BOARD} $PWD/examples/SerialDebug/SerialDebug.ino
+  
 notifications:
   email:
     on_success: change
     on_failure: change
+    
+env:
+  global:
+    - IDE_VERSION=1.8.8
+  matrix:
+    - BOARD=arduino:avr:uno IDE_VERSION=1.8.8
+    - BOARD=arduino:esp:esp32
+    - BOARD=arduino:esp:esp8266
